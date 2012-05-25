@@ -1170,6 +1170,31 @@
         checkCompat(true);
         navigator.id.get(callback);
       },
+      secret: {
+        generateAndWrap: function(identity, callback) {
+          setTimeout(function () {
+            // TODO: check identity
+            var jwcrypto = require('./lib/jwcrypto.js');
+
+            jwcrypto.addEntropy('TODO', 256); // TODO: use entropy provided by BID server
+            var plainKey = jwcrypto.generateKey(128);
+            var userKey = JSON.stringify("secret"); // TODO: read from localStorage
+            // TODO: add the origin as associated data?
+            var wrappedKey = jwcrypto.encrypt(plainKey, userKey);
+
+            callback(plainKey, wrappedKey);
+          }, 2000);
+        },
+        unwrap: function(identity, wrappedKey, callback) {
+          setTimeout(function () {
+            // TODO: check identity
+            // TODO: check origin of the wrapped key and compare with current origin
+            var userKey = JSON.stringify("secret"); // TODO: read from localStorage
+            var plainKey = jwcrypto.decrypt(wrappedKey, userKey);
+            callback(plainKey);
+          }, 2000);
+        }
+      },
       // required for forwards compatibility with native implementations
       _shimmed: true
     };
