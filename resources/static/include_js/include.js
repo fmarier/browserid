@@ -1171,27 +1171,43 @@
         navigator.id.get(callback);
       },
       secret: {
-        generateAndWrap: function(identity, callback) {
+        generateAndWrap: function(identity, successCB, failureCB) {
           setTimeout(function () {
-            // TODO: check identity
-            var jwcrypto = require('./lib/jwcrypto.js');
+            if (identity) { // TODO: check identity matches logged in identity
+              var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
 
-            jwcrypto.addEntropy('TODO', 256); // TODO: use entropy provided by BID server
-            var plainKey = jwcrypto.generateKey(128);
-            var userKey = JSON.stringify("secret"); // TODO: read from localStorage
-            // TODO: add the origin as associated data?
-            var wrappedKey = jwcrypto.encrypt(plainKey, userKey);
+              var userKey = JSON.stringify("TODO: secret"); // TODO: read from localStorage
 
-            callback(plainKey, wrappedKey);
+              jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
+              var plainKey = jwcrypto.generateKey(128);
+              var origin = 'TODO: origin'; // TODO: get the real origin
+              var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
+
+              var wrappedKey = jwcrypto.encrypt(bundle, userKey);
+
+              successCB(plainKey, wrappedKey);
+            } else {
+              failureCB('Invalid identity');
+            }
           }, 2000);
         },
-        unwrap: function(identity, wrappedKey, callback) {
+        unwrap: function(identity, wrappedKey, successCB, failureCB) {
           setTimeout(function () {
-            // TODO: check identity
-            // TODO: check origin of the wrapped key and compare with current origin
-            var userKey = JSON.stringify("secret"); // TODO: read from localStorage
-            var plainKey = jwcrypto.decrypt(wrappedKey, userKey);
-            callback(plainKey);
+            if (identity) { // TODO: check identity matches logged in identity
+              var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
+
+              var userKey = JSON.stringify("TODO: secret"); // TODO: read from localStorage
+              var bundle = JSON.parse(jwcrypto.decrypt(wrappedKey, userKey));
+
+              var origin = 'TODO: origin'; // TODO: get the real origin
+              if (bundle.audience === origin) {
+                successCB(bundle.secretkey);
+              } else {
+                failureCB('Origin mismatch');
+              }
+            } else {
+              failureCB('Invalid identity');
+            }
           }, 2000);
         }
       },
