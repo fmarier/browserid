@@ -1113,6 +1113,15 @@
       });
     };
 
+    function getCurrentOrigin() {
+      // (taken from the bottom of /static/shared/user.js)
+      var currentOrigin = window.location.protocol + '//' + window.location.hostname;
+      if (window.location.port) {
+        currentOrigin += ':' + window.location.port;
+      }
+      return currentOrigin;
+    }
+
     navigator.id = {
       request: function(options) {
         if (this != navigator.id)
@@ -1176,11 +1185,11 @@
             if (identity) { // TODO: check identity matches logged in identity
               var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
 
-              var userKey = JSON.stringify("TODO: secret"); // TODO: read from localStorage
+              var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
 
               jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
               var plainKey = jwcrypto.generateKey(128);
-              var origin = 'TODO: origin'; // TODO: get the real origin
+              var origin = getCurrentOrigin();
               var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
 
               var wrappedKey = jwcrypto.encrypt(bundle, userKey);
@@ -1196,10 +1205,10 @@
             if (identity) { // TODO: check identity matches logged in identity
               var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
 
-              var userKey = JSON.stringify("TODO: secret"); // TODO: read from localStorage
+              var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
               var bundle = JSON.parse(jwcrypto.decrypt(wrappedKey, userKey));
 
-              var origin = 'TODO: origin'; // TODO: get the real origin
+              var origin = getCurrentOrigin();
               if (bundle.audience === origin) {
                 successCB(bundle.secretkey);
               } else {
