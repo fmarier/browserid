@@ -1180,7 +1180,32 @@
         navigator.id.get(callback);
       },
       secret: {
+        generateAndWrap2: function(identity, successCB, failureCB) {
+          _open_hidden_iframe();
+          if (!commChan) return setTimeout(function() { failureCB('not supported here'); }, 0);
+
+          commChan.call({
+            method: 'generate_and_wrap',
+            params: identity,
+            success: successCB,
+            error: failureCB
+          });
+        },
+        unwrap2: function(identity, wrappedKey, successCB, failureCB) {
+          _open_hidden_iframe();
+
+          commChan.call({
+            method: 'unwrap',
+            params: {
+              identity: identity,
+              wrappedKey: wrappedKey
+            },
+            success: successCB,
+            error: failureCB
+          });
+        },
         generateAndWrap: function(identity, successCB, failureCB) {
+
           setTimeout(function () {
             if (identity) { // TODO: check identity matches logged in identity
               var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere

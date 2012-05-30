@@ -7,7 +7,8 @@
   var bid = BrowserID,
       network = bid.Network,
       user = bid.User,
-      storage = bid.Storage;
+      storage = bid.Storage,
+      keywrapping = bid.KeyWrapping;
 
   // Initialize all localstorage values to default values.  Neccesary for
   // proper sync of IE8 localStorage across multiple simultaneous
@@ -100,5 +101,30 @@
     // lets manually purge our network cache
     network.clearContext();
     checkAndEmit();
+  });
+
+  chan.bind("generate_and_wrap", function(trans, params) {
+    trans.delayReturn(true);
+    keywrapping.generateAndWrap(
+      params.identity,
+      function(r) {
+        trans.success(r);
+      },
+      function(err) {
+        trans.error(err);
+      });
+  });
+
+  chan.bind("unwrap", function(trans, params) {
+    trans.delayReturn(true);
+    keywrapping.unwrap(
+      params.identity,
+      params.wrappedKey,
+      function(r) {
+        trans.success(r);
+      },
+      function(err) {
+        trans.error(err);
+      });
   });
 }());

@@ -206,7 +206,16 @@ $(document).ready(function() {
     });
   });
 
-  $(".specify button.logout").click(navigator.id.logout);
+  $(".specify button.logout").click(function() {
+    navigator.id.secret.generateAndWrap2(
+      "lloyd@hilaiel.com",
+      function(results) {
+        alert("success achieved");
+      },
+      function(msg) {
+        alert("boo hoo");
+      });
+  });
 
   $(".session button.update_session").click(function() {
     storage.loggedInUser = $.trim($('#loggedInUser').val());
