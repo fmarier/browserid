@@ -108,7 +108,7 @@
     keywrapping.generateAndWrap(
       params.identity,
       function(r) {
-        trans.success(r);
+        trans.complete(r);
       },
       function(err) {
         trans.error(err);
@@ -121,7 +121,7 @@
       params.identity,
       params.wrappedKey,
       function(r) {
-        trans.success(r);
+        trans.complete(r);
       },
       function(err) {
         trans.error(err);

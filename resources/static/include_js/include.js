@@ -1180,7 +1180,7 @@
         navigator.id.get(callback);
       },
       secret: {
-        generateAndWrap2: function(identity, successCB, failureCB) {
+        generateAndWrap: function(identity, successCB, failureCB) {
           _open_hidden_iframe();
           if (!commChan) return setTimeout(function() { failureCB('not supported here'); }, 0);
 
@@ -1191,7 +1191,7 @@
             error: failureCB
           });
         },
-        unwrap2: function(identity, wrappedKey, successCB, failureCB) {
+        unwrap: function(identity, wrappedKey, successCB, failureCB) {
           _open_hidden_iframe();
 
           commChan.call({
@@ -1204,7 +1204,7 @@
             error: failureCB
           });
         },
-        generateAndWrap: function(identity, successCB, failureCB) {
+        generateAndWrap2: function(identity, successCB, failureCB) {
 
           setTimeout(function () {
             if (identity) { // TODO: check identity matches logged in identity
@@ -1225,7 +1225,7 @@
             }
           }, 2000);
         },
-        unwrap: function(identity, wrappedKey, successCB, failureCB) {
+        unwrap2: function(identity, wrappedKey, successCB, failureCB) {
           setTimeout(function () {
             if (identity) { // TODO: check identity matches logged in identity
               var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
