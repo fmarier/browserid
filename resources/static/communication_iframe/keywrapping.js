@@ -11,13 +11,51 @@ BrowserID.KeyWrapping = (function() {
 
   function generateAndWrap(identity, successCB, failureCB) {
     setTimeout(function () {
-      failureCB('generateAndWrap not implemented yet');
+      if (!jwcrypto) {
+        jwcrypto = require('./lib/jwcrypto.js');
+      }
+
+      if (identity) { // TODO: check identity matches logged in identity
+        var origin = 'http://127.0.0.1:8000'; // TODO: read from BrowserID.User
+        // TODO: check that user is logged into that origin/RP
+
+        var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
+
+        jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
+        var plainKey = jwcrypto.generateKey(128);
+        var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
+
+        var wrappedKey = jwcrypto.encrypt(bundle, userKey);
+
+        successCB(plainKey, wrappedKey);
+      } else {
+        failureCB('Invalid identity');
+      }
     }, 0);
   }
 
   function unwrap(identity, wrappedKey, successCB, failureCB) {
     setTimeout(function () {
-      failureCB('unwrap not implemented yet');
+      if (!jwcrypto) {
+        jwcrypto = require('./lib/jwcrypto.js');
+      }
+
+      if (identity) { // TODO: check identity matches logged in identity
+        var origin = 'http://127.0.0.1:8000'; // TODO: read from BrowserID.User
+        // TODO: check that user is logged into that origin/RP
+
+        var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
+        var d = jwcrypto.decrypt(wrappedKey, userKey);
+        var bundle = JSON.parse(d);
+
+        if (bundle.audience === origin) {
+          successCB(bundle.secretkey);
+        } else {
+          failureCB('Origin mismatch');
+        }
+      } else {
+        failureCB('Invalid identity');
+      }
     }, 0);
   }
 

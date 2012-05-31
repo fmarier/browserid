@@ -1186,8 +1186,12 @@
 
           commChan.call({
             method: 'generate_and_wrap',
-            params: identity,
-            success: successCB,
+            params: {
+              identity: identity
+            },
+            success: function (r) {
+              successCB(r.plainKey, r.wrappedKey)
+            },
             error: failureCB
           });
         },
@@ -1203,46 +1207,6 @@
             success: successCB,
             error: failureCB
           });
-        },
-        generateAndWrap2: function(identity, successCB, failureCB) {
-
-          setTimeout(function () {
-            if (identity) { // TODO: check identity matches logged in identity
-              var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
-
-              var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
-
-              jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
-              var plainKey = jwcrypto.generateKey(128);
-              var origin = getCurrentOrigin();
-              var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
-
-              var wrappedKey = jwcrypto.encrypt(bundle, userKey);
-
-              successCB(plainKey, wrappedKey);
-            } else {
-              failureCB('Invalid identity');
-            }
-          }, 2000);
-        },
-        unwrap2: function(identity, wrappedKey, successCB, failureCB) {
-          setTimeout(function () {
-            if (identity) { // TODO: check identity matches logged in identity
-              var jwcrypto = require('./lib/jwcrypto.js'); // TODO: this should be done elsewhere
-
-              var userKey = JSON.stringify("TODO: secret"); // TODO: read from browserid.org's localStorage
-              var bundle = JSON.parse(jwcrypto.decrypt(wrappedKey, userKey));
-
-              var origin = getCurrentOrigin();
-              if (bundle.audience === origin) {
-                successCB(bundle.secretkey);
-              } else {
-                failureCB('Origin mismatch');
-              }
-            } else {
-              failureCB('Invalid identity');
-            }
-          }, 2000);
         }
       },
       // required for forwards compatibility with native implementations
