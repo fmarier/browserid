@@ -107,6 +107,7 @@
     trans.delayReturn(true);
     keywrapping.generateAndWrap(
       params.identity,
+      trans.origin,
       function(plainKey, wrappedKey) {
         trans.complete({plainKey: plainKey, wrappedKey: wrappedKey});
       },
@@ -119,6 +120,7 @@
     trans.delayReturn(true);
     keywrapping.unwrap(
       params.identity,
+      trans.origin,
       params.wrappedKey,
       function(r) {
         trans.complete(r);
