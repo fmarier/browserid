@@ -7,6 +7,8 @@
 BrowserID.KeyWrapping = (function() {
   "use strict";
 
+  const KEYSERVER = 'http://127.0.0.1:9000'; // TODO: move this to the config file
+
   var jwcrypto,
       keyserverChan,
       bid = BrowserID,
@@ -15,16 +17,15 @@ BrowserID.KeyWrapping = (function() {
 
   // this is for calls that are non-interactive
   function _open_hidden_keyserver_iframe() {
-    var keyServer = 'http://127.0.0.1:9000'; // TODO: move this to the config file
     if (!keyserverChan) {
       var doc = window.document;
       var iframe = doc.createElement("iframe");
       iframe.style.display = "none";
       doc.body.appendChild(iframe);
-      iframe.src = keyServer + "/communication_iframe";
+      iframe.src = KEYSERVER + "/communication_iframe";
       keyserverChan = Channel.build({
         window: iframe.contentWindow,
-        origin: keyServer,
+        origin: KEYSERVER,
         scope: "mozks_ni"
       });
     }
@@ -36,27 +37,31 @@ BrowserID.KeyWrapping = (function() {
     if (identity !== storage.getLoggedIn(origin)) {
       failureCB('Invalid identity');
     } else {
-      keyserverChan.call({
-        method: 'get_user_key',
-        params: {
-          identity: identity
-        },
-        success: function (userKey) {
-          if (!jwcrypto) {
-            jwcrypto = require('./lib/jwcrypto.js');
+      user.getAssertion(identity, KEYSERVER, function (assertion) {
+        keyserverChan.call({
+          method: 'get_user_key',
+          params: {
+            assertion: assertion
+          },
+          success: function (userKey) {
+            if (!jwcrypto) {
+              jwcrypto = require('./lib/jwcrypto.js');
+            }
+
+            jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
+            var plainKey = jwcrypto.generateKey(128);
+            var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
+
+            var wrappedKey = jwcrypto.encrypt(bundle, userKey);
+
+            successCB(plainKey, wrappedKey);
+          },
+          error: function (err) {
+            failureCB(err);
           }
-
-          jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
-          var plainKey = jwcrypto.generateKey(128);
-          var bundle = JSON.stringify({audience: origin, secretkey: plainKey});
-
-          var wrappedKey = jwcrypto.encrypt(bundle, userKey);
-
-          successCB(plainKey, wrappedKey);
-        },
-        error: function (err) {
-          failureCB(err);
-        }
+        });
+      }, function (err) {
+        failureCB(err);
       });
     }
   }
@@ -67,28 +72,32 @@ BrowserID.KeyWrapping = (function() {
     if (identity !== storage.getLoggedIn(origin)) {
       failureCB('Invalid identity');
     } else {
-      keyserverChan.call({
-        method: 'get_user_key',
-        params: {
-          identity: identity
-        },
-        success: function (userKey) {
-          if (!jwcrypto) {
-            jwcrypto = require('./lib/jwcrypto.js');
-          }
+      user.getAssertion(identity, KEYSERVER, function (assertion) {
+        keyserverChan.call({
+          method: 'get_user_key',
+          params: {
+            assertion: assertion
+          },
+          success: function (userKey) {
+            if (!jwcrypto) {
+              jwcrypto = require('./lib/jwcrypto.js');
+            }
 
-          var d = jwcrypto.decrypt(wrappedKey, userKey);
-          var bundle = JSON.parse(d);
+            var d = jwcrypto.decrypt(wrappedKey, userKey);
+            var bundle = JSON.parse(d);
 
-          if (bundle.audience === origin) {
-            successCB(bundle.secretkey);
-          } else {
-            failureCB('Origin mismatch');
+            if (bundle.audience === origin) {
+              successCB(bundle.secretkey);
+            } else {
+              failureCB('Origin mismatch');
+            }
+          },
+          error: function (err) {
+            failureCB(err);
           }
-        },
-        error: function (err) {
-          failureCB(err);
-        }
+        });
+      }, function (err) {
+        failureCB(err);
       });
     }
   }
