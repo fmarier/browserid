@@ -7,7 +7,7 @@
 BrowserID.KeyWrapping = (function() {
   "use strict";
 
-  const KEYSERVER = 'http://127.0.0.1:9000'; // TODO: move this to the config file
+  var KEYSERVER = 'http://127.0.0.1:9000'; // TODO: move this to the config file
 
   var jwcrypto,
       keyserverChan,
