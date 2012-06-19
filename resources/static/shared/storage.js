@@ -429,8 +429,9 @@ BrowserID.Storage = (function() {
       // TODO: make sure it also gets removed after 1 hour if NotMycomputer
       storage.removeItem("passwordKey");
     } else if (!storage.passwordKey) {
-      // TODO: generate a password-derived key
-      storage.passwordKey = JSON.stringify("TODO: secret");
+      prepareDeps();
+      var salt = 'not secure!'; // TODO: use a strong salt
+      storage.passwordKey = jwcrypto.pbkdf2(password, salt);
     }
   }
 
