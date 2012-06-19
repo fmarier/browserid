@@ -625,6 +625,7 @@ BrowserID.User = (function() {
       // log out of browserid
       network.logout(function() {
         setAuthenticationStatus(false);
+        storage.setPasswordKey(null);
         complete(onComplete);
       }, onFailure);
     },
@@ -735,6 +736,7 @@ BrowserID.User = (function() {
         setAuthenticationStatus(authenticated);
 
         if(authenticated) {
+          storage.setPasswordKey(password);
           User.syncEmails(function() {
             onComplete && onComplete(authenticated);
           }, onFailure);

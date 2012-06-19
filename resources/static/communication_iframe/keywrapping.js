@@ -34,22 +34,41 @@ BrowserID.KeyWrapping = (function() {
   function _generateUserKey(assertion, successCB, failureCB) {
     jwcrypto.addEntropy('TODO: random', 256); // TODO: use entropy provided by BID server
 
-    var plainKey = jwcrypto.generateKey(128);
-    var userKey = JSON.stringify(plainKey);
+    var passwordKey = storage.getPasswordKey();
+    if (passwordKey) {
+      var plainUserKey = JSON.stringify(jwcrypto.generateKey(128));
+      var wrappedUserKey = jwcrypto.encrypt(plainUserKey, passwordKey);
 
-    keyserverChan.call({
-      method: 'set_user_key',
-      params: {
-        assertion: assertion,
-        userkey: userKey
-      },
-      success: function () {
-        successCB(userKey);
-      },
-      error: function (err) {
-        failureCB(err);
+      keyserverChan.call({
+        method: 'set_user_key',
+        params: {
+          assertion: assertion,
+          userkey: wrappedUserKey
+        },
+        success: function () {
+          successCB(plainUserKey);
+        },
+        error: function (err) {
+          failureCB(err);
+        }
+      });
+    } else {
+      failureCB('Cannot find a password-derived key for this account.');
+    }
+  }
+
+  function _unwrapUserKey(wrappedUserKey, successCB, failureCB) {
+    var passwordKey = storage.getPasswordKey();
+    if (passwordKey) {
+      var plainUserKey = jwcrypto.decrypt(wrappedUserKey, passwordKey);
+      if (plainUserKey) {
+        successCB(plainUserKey);
+      } else {
+        failureCB('Cannot unwrap the user key for this identity.');
       }
-    });
+    } else {
+      failureCB('Cannot find a password-derived key for this account.');
+    }
   }
 
   function _decryptKey(origin, wrappedKey, userKey, successCB, failureCB) {
@@ -85,17 +104,19 @@ BrowserID.KeyWrapping = (function() {
           params: {
             assertion: assertion
           },
-          success: function (userKey) {
+          success: function (wrappedUserKey) {
             if (!jwcrypto) {
               jwcrypto = require('./lib/jwcrypto.js');
             }
 
-            if (!userKey) {
-              _generateUserKey(assertion, function (userKey) {
-                _generateAndEncryptKey(origin, userKey, successCB, failureCB);
-              });
+            if (!wrappedUserKey) {
+              _generateUserKey(assertion, function (plainUserKey) {
+                _generateAndEncryptKey(origin, plainUserKey, successCB, failureCB);
+              }, failureCB);
             } else {
-              _generateAndEncryptKey(origin, userKey, successCB, failureCB);
+              _unwrapUserKey(wrappedUserKey, function (plainUserKey) {
+                _generateAndEncryptKey(origin, plainUserKey, successCB, failureCB);
+              }, failureCB);
             }
           },
           error: function (err) {
@@ -120,17 +141,19 @@ BrowserID.KeyWrapping = (function() {
           params: {
             assertion: assertion
           },
-          success: function (userKey) {
+          success: function (wrappedUserKey) {
             if (!jwcrypto) {
               jwcrypto = require('./lib/jwcrypto.js');
             }
 
-            if (!userKey) {
-              _generateUserKey(assertion, function (userKey) {
-                _decryptKey(origin, wrappedKey, userKey, successCB, failureCB);
-              });
+            if (!wrappedUserKey) {
+              _generateUserKey(assertion, function (plainUserKey) {
+                _decryptKey(origin, wrappedKey, plainUserKey, successCB, failureCB);
+              }, failureCB);
             } else {
-              _decryptKey(origin, wrappedKey, userKey, successCB, failureCB);
+              _unwrapUserKey(wrappedUserKey, function (plainUserKey) {
+                _decryptKey(origin, wrappedKey, plainUserKey, successCB, failureCB);
+              }, failureCB);
             }
           },
           error: function (err) {

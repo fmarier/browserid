@@ -45,6 +45,7 @@ BrowserID.Storage = (function() {
     storage.removeItem("emails");
     storage.removeItem("siteInfo");
     storage.removeItem("managePage");
+    storage.removeItem("passwordKey");
   }
 
   // initialize all localStorage values to default if they are unset.
@@ -421,6 +422,22 @@ BrowserID.Storage = (function() {
     storage.emailToUserID = JSON.stringify(allInfo);
   }
 
+  // use the user's password to create a secret key which will be used
+  // to wrap the secret key for further keywrapping
+  function setPasswordKey(password) {
+    if (!password) {
+      // TODO: make sure it also gets removed after 1 hour if NotMycomputer
+      storage.removeItem("passwordKey");
+    } else if (!storage.passwordKey) {
+      // TODO: generate a password-derived key
+      storage.passwordKey = JSON.stringify("TODO: secret");
+    }
+  }
+
+  function getPasswordKey() {
+    return storage.passwordKey;
+  }
+
   return {
     /**
      * Add an email address and optional key pair.
@@ -585,6 +602,8 @@ BrowserID.Storage = (function() {
     clear: clear,
     setReturnTo: setReturnTo,
     getReturnTo: getReturnTo,
+    setPasswordKey: setPasswordKey,
+    getPasswordKey: getPasswordKey,
     /**
      * Set all used storage values to default if they are unset.  This function
      * is required for proper localStorage sync between different browsing contexts,
