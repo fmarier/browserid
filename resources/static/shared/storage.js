@@ -32,6 +32,12 @@ BrowserID.Storage = (function() {
       ONE_DAY_IN_MS = (1000 * 60 * 60 * 24),
       storage = BrowserID.getStorage();
 
+  function prepareDeps() {
+    if (!jwcrypto) {
+      jwcrypto= require("./lib/jwcrypto");
+    }
+  }
+
   // temporary, replace with helpers.log if storage uses elog long term...
   function elog (msg) {
     if (window.console && console.error) console.error(msg);
