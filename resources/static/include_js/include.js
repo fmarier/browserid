@@ -1182,7 +1182,7 @@
       secret: {
         generateAndWrap: function(identity, successCB, failureCB) {
           _open_hidden_iframe();
-          if (!commChan) return setTimeout(function() { failureCB('not supported here'); }, 0);
+          if (!commChan) setTimeout(function() { failureCB('not supported here'); }, 0);
 
           commChan.call({
             method: 'generate_and_wrap',
@@ -1190,7 +1190,7 @@
               identity: identity
             },
             success: function (r) {
-              successCB(r.plainKey, r.wrappedKey)
+              successCB(r.plainKey, r.wrappedKey);
             },
             error: failureCB
           });
