@@ -57,11 +57,12 @@ BrowserID.Modules.PickEmail = (function() {
   function signIn() {
     /*jshint validthis: true*/
     var self=this,
+        name = 'John Doe', // TODO: find a way to extract the name from the page
         email = dom.getInner("input[type=radio]:checked");
 
     var valid = checkEmail.call(self, email);
     if (valid) {
-      self.close("email_chosen", { email: email });
+      self.close("email_chosen", { email: email, name: name });
     }
   }
 

@@ -428,7 +428,7 @@ BrowserID.State = (function() {
       if (info.assertion !== null) {
         storage.setLoggedIn(user.getOrigin(), self.email);
 
-        startAction("doAssertionGenerated", { assertion: info.assertion, email: self.email });
+        startAction("doAssertionGenerated", { assertion: info.assertion, email: self.email, info: info.info });
       }
       else {
         redirectToState("pick_email");

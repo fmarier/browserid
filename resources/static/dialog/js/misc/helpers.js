@@ -43,7 +43,7 @@
     }
   }
 
-  function getAssertion(email, callback) {
+  function getAssertion(email, callback, name) {
     var self=this,
         wait = bid.Screens.wait;
 
@@ -53,7 +53,8 @@
       assert = assert || null;
       wait.hide();
       self.publish("assertion_generated", {
-        assertion: assert
+        assertion: assert,
+        info: {name: name}
       });
 
       complete(callback, assert);

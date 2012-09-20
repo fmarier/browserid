@@ -1096,11 +1096,13 @@ BrowserID.User = (function() {
      * @param {function} [onFailure] - Called on error.
      */
     getAssertion: function(email, audience, onComplete, onFailure) {
+      var info = {name: 'getAssertion'}; // TODO: get name from the card
+
       // we use the current time from the browserid servers
       // to avoid issues with clock drift on user's machine.
       // (issue #329)
         function complete(status) {
-          onComplete && onComplete(status);
+          onComplete && onComplete(status, info);
         }
 
         var storedID = storage.getEmail(email),
@@ -1176,6 +1178,12 @@ BrowserID.User = (function() {
       return storage.getEmails();
     },
 
+    getCards: function (email) {
+      // TODO: get identities from the card server
+      // TODO: deal with identities that don't have any cards
+      return [{name: 'User One'}, {name: 'User Two'}];
+    },
+
     /**
      * Get the list of identities sorted by address.
      * @method getSortedEmailKeypairs
@@ -1187,11 +1195,18 @@ BrowserID.User = (function() {
 
       for(var key in identities) {
         if(identities.hasOwnProperty(key)) {
-          sortedIdentities.push({ address: key, info: identities[key] });
+          var cards = User.getCards(key);
+
+          for(var card in cards) {
+            if(cards.hasOwnProperty(card)) {
+              sortedIdentities.push({ address: key, info: identities[key], name: cards[card].name});
+            }
+          }
         }
       }
 
       sortedIdentities.sort(function(a, b) {
+        // TODO: fix the sorting to handle names too
         var retval = a.address > b.address ? 1 : a.address < b.address ? -1 : 0;
         return retval;
       });
@@ -1238,8 +1253,8 @@ BrowserID.User = (function() {
           var loggedInEmail = storage.getLoggedIn(origin);
           if (loggedInEmail !== siteSpecifiedEmail) {
             if (loggedInEmail) {
-              User.getAssertion(loggedInEmail, origin, function(assertion) {
-                onComplete(assertion ? loggedInEmail : null, assertion);
+              User.getAssertion(loggedInEmail, origin, function(assertion, info) {
+                onComplete(assertion ? loggedInEmail : null, assertion, info);
               }, onFailure);
             } else {
               onComplete(null, null);

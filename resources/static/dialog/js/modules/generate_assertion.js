@@ -21,7 +21,7 @@ BrowserID.Modules.GenerateAssertion = (function() {
         throw "email required";
       }
 
-      dialogHelpers.getAssertion.call(self, email, options.ready);
+      dialogHelpers.getAssertion.call(self, email, options.ready, options.name);
       // TODO, this is not needed here, it is done in the state machine.
       storage.setLoggedIn(user.getOrigin(), options.email);
       sc.start.call(self, options);

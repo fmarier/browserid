@@ -1211,7 +1211,7 @@
         w = undefined;
         if (!err && r && r.assertion) {
           try {
-            if (observers.login) observers.login(r.assertion);
+            if (observers.login) observers.login(r.assertion, r.info);
           } catch(e) {
             // client's observer threw an exception
           }
@@ -1280,9 +1280,9 @@
 
         checkCompat(true);
         internalWatch({
-          onlogin: function(assertion) {
+          onlogin: function(assertion, info) {
             if (callback) {
-              callback(assertion);
+              callback(assertion, info);
               callback = null;
             }
           },
