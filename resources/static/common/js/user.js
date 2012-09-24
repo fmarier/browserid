@@ -1096,13 +1096,11 @@ BrowserID.User = (function() {
      * @param {function} [onFailure] - Called on error.
      */
     getAssertion: function(email, audience, onComplete, onFailure) {
-      var info = {name: 'getAssertion'}; // TODO: get name from the card
-
       // we use the current time from the browserid servers
       // to avoid issues with clock drift on user's machine.
       // (issue #329)
         function complete(status) {
-          onComplete && onComplete(status, info);
+          onComplete && onComplete(status);
         }
 
         var storedID = storage.getEmail(email),
@@ -1253,8 +1251,8 @@ BrowserID.User = (function() {
           var loggedInEmail = storage.getLoggedIn(origin);
           if (loggedInEmail !== siteSpecifiedEmail) {
             if (loggedInEmail) {
-              User.getAssertion(loggedInEmail, origin, function(assertion, info) {
-                onComplete(assertion ? loggedInEmail : null, assertion, info);
+              User.getAssertion(loggedInEmail, origin, function(assertion) {
+                onComplete(assertion ? loggedInEmail : null, assertion);
               }, onFailure);
             } else {
               onComplete(null, null);
