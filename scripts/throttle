@@ -1,11 +1,32 @@
 #!/bin/sh
 
-BANDWIDTH=56kbit
-LATENCY=200msec
-PACKET_LOSS=2%
-
 tc qdisc del dev eth0 root 2> /dev/null
 
-# 400ms ping, unlimited Mbps down, 0.05 Mbps up
+if [ "z$1" = "zdialup" ] ; then
+	echo "Brace yourself, enabling dialup preset..."
+	BANDWIDTH=56kbit
+	LATENCY=200msec
+elif [ "z$1" = "z2g" ] ; then
+	echo "Enabling 2G preset..."
+	BANDWIDTH=112kbit
+	LATENCY=150msec
+elif [ "z$1" = "zedge" ] ; then
+	echo "Enabling EDGE preset..."
+	BANDWIDTH=384kbit
+	LATENCY=100msec
+elif [ "z$1" = "znone" ] ; then
+	echo "Throttling disabled."
+	exit 0;
+else
+	echo "Usage: $0 (dialup|2g|edge|none) [lossy]"
+	exit 0;
+fi
+
+PACKET_LOSS=2%
+if [ "z$2" = "zlossy" ] ; then
+	echo "...on a very lossy connection"
+	PACKET_LOSS=20%
+fi
+
 tc qdisc add dev eth0 root handle 1:0 netem delay $LATENCY loss $PACKET_LOSS
 tc qdisc add dev eth0 parent 1:1 handle 10: tbf rate $BANDWIDTH burst $BANDWIDTH latency $LATENCY
