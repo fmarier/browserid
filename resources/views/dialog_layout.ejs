@@ -19,6 +19,7 @@
   <title><%= format(gettext("Mozilla Persona: %s"), [gettext(title)]) %></title>
 </head>
   <body class="waiting">
+    <div id="dialog">
       <header id="header">
          <% if (useJavascript !== false && enable_development_menu) { %>
            <a href="#" id="showDevelopment">&nbsp;</a>
@@ -38,5 +39,6 @@
       <% if (useJavascript !== false) { %>
         <%- cachify_js(util.format('/production/%s/dialog.js', locale)) %>
       <% } %>
-	</body>
+    </div>
+  </body>
 </html>
