@@ -197,10 +197,11 @@ suite.addBatch({
             assertion: assertion
           }).call(this);
         },
-        "works": function(err, r) {
+        "fails as expected": function(err, r) {
           var resp = JSON.parse(r.body);
           assert.isObject(resp);
-          assert.isTrue(resp.success);
+          assert.isFalse(resp.success);
+          assert.strictEqual(resp.error, "cannot add email address to an existing account");
         }
       }
     }

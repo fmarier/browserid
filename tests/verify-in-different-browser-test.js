@@ -108,7 +108,7 @@ suite.addBatch({
         "fails without a password": function(err, r) {
           assert.strictEqual(r.code, 401);
         },
-        "but succeeds": {
+        "and fails again": {
           topic: function() {
             wsapi.post('/wsapi/complete_email_confirmation', {
               token: this._token,
@@ -117,6 +117,7 @@ suite.addBatch({
           },
           "with one": function(err, r) {
             assert.strictEqual(r.code, 200);
+            assert.strictEqual(JSON.parse(r.body).success, false);
           }
         }
       }

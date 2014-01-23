@@ -9,6 +9,7 @@ require('./lib/test_env.js');
 const
 assert = require('assert'),
 vows = require('vows'),
+db = require('../lib/db.js'),
 start_stop = require('./lib/start-stop.js'),
 wsapi = require('./lib/wsapi.js'),
 primary = require('./lib/primary.js');
@@ -155,9 +156,9 @@ suite.addBatch({
                 token: this._token
               }).call(this);
             },
-            "succeeds": function(err, r) {
+            "fails as expected": function(err, r) {
               assert.equal(r.code, 200);
-              assert.strictEqual(JSON.parse(r.body).success, true);
+              assert.strictEqual(JSON.parse(r.body).success, false);
             }
           }
         }
@@ -166,12 +167,29 @@ suite.addBatch({
   }
 });
 
-// after adding a secondary and setting password, we're password auth'd
 suite.addBatch({
-  "auth_level": {
-    topic: wsapi.get('/wsapi/session_context'),
-    "is 'password' after authenticating with password" : function(err, r) {
-      assert.strictEqual(JSON.parse(r.body).auth_level, 'password');
+  "manually re-adding the second email": {
+    topic: function() {
+      var cb = this.callback;
+      db.emailToUID(TEST_EMAIL, function (err, uid) {
+        if (err) return cb(err);
+        db.forcefullyAddEmail(uid, SECONDARY_EMAIL, 'secondary', cb);
+      });
+    },
+    "works": function(err) {
+      assert.isNull(err);
+    },
+    "and setting a password": {
+      topic: function () {
+        var cb = this.callback;
+        db.emailToUID(SECONDARY_EMAIL, function (err, uid) {
+          if (err) return cb(err);
+          db.updatePassword(uid, 'DEADBEEFCAFE', false, cb);
+        });
+      },
+      "works": function (err) {
+        assert.isFalse(!!err);
+      }
     }
   }
 });
@@ -184,8 +202,12 @@ suite.addBatch({
       pass: TEST_PASS,
       ephemeral: false
     }),
-    "works": function(err, r) {
+    "fails as expected": function(err, r) {
       assert.strictEqual(r.code, 200);
+      var body = JSON.parse(r.body);
+      assert.isObject(body);
+      assert.strictEqual(body.success, false);
+      assert.strictEqual(body.reason, "password mismatch for user: testuser@example.domain");
     }
   }
 });
@@ -203,44 +225,6 @@ suite.addBatch({
       var body = JSON.parse(r.body);
       assert.strictEqual(body.success, false);
       assert.strictEqual(body.reason, 'a password may not be set at this time');
-    },
-    "but with no password specified": {
-      topic: wsapi.post('/wsapi/stage_email', {
-        email: SECOND_SECONDARY_EMAIL,
-        site:'http://fakesite.com:123'
-      }),
-      "succeeds": function(err, r) {
-        assert.strictEqual(r.code, 200);
-        assert.strictEqual(JSON.parse(r.body).success, true);
-      },
-      "and get a token": {
-        topic: function() {
-          start_stop.waitForToken(this.callback);
-        },
-        "successfully": function (err, t) {
-          assert.isNull(err);
-          this._token = t;
-          assert.strictEqual(typeof t, 'string');
-        },
-        "and to complete":  {
-          topic: function(err, t) {
-            wsapi.get('/wsapi/email_for_token', {
-              token: t
-            }).call(this);
-          },
-          "with a token": {
-            topic: function() {
-              wsapi.post('/wsapi/complete_email_confirmation', {
-                token: this._token
-              }).call(this);
-            },
-            "succeeds": function(err, r) {
-              assert.equal(r.code, 200);
-              assert.strictEqual(JSON.parse(r.body).success, true);
-            }
-          }
-        }
-      }
     }
   }
 });

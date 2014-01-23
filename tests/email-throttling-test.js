@@ -116,9 +116,9 @@ suite.addBatch({
     topic: function() {
       wsapi.post('/wsapi/complete_email_confirmation', { token: token }).call(this);
     },
-    "it works swimmingly": function(err, r) {
+    "it fails as expected": function(err, r) {
       assert.equal(r.code, 200);
-      assert.strictEqual(JSON.parse(r.body).success, true);
+      assert.strictEqual(JSON.parse(r.body).success, false);
       token = undefined;
     }
   }

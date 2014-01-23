@@ -315,18 +315,18 @@ suite.addBatch({
           db.isStaged('lloyd@somewhe.re', function(err, r) { cb(secret, r); });
         },
         "makes it visible via isStaged": function(sekret, r) { assert.isTrue(r); },
-        "lets you verify it": {
+        "doesn't let you verify it": {
           topic: function(secret, r) {
             db.completeConfirmEmail(secret, this.callback);
           },
-          "successfully": function(err, r) {
-            assert.isNull(err);
+          "and throws an error instead": function(err, r) {
+            assert.strictEqual(err, "cannot add email address to an existing account");
           },
           "and knownEmail": {
             topic: function() { db.emailKnown('lloyd@somewhe.re', this.callback); },
-            "returns true": function(err, r) {
+            "returns false": function(err, r) {
               assert.isNull(err);
-              assert.isTrue(r);
+              assert.isFalse(r);
             }
           },
           "and isStaged": {
@@ -356,18 +356,9 @@ suite.addBatch({
 // exports.emailsBelongToSameAccount
 suite.addBatch({
   "emails do belong to the same account": {
-    "is true": {
-      topic: function() {
-        db.emailsBelongToSameAccount('lloyd@nowhe.re', 'lloyd@somewhe.re', this.callback);
-      },
-      "when they do": function(err, r) {
-        assert.isNull(err);
-        assert.isTrue(r);
-      }
-    },
     "is false": {
       topic: function() {
-        db.emailsBelongToSameAccount('lloyd@anywhe.re', 'lloyd@somewhe.re', this.callback);
+        db.emailsBelongToSameAccount('lloyd@nowhe.re', 'lloyd@somewhe.re', this.callback);
       },
       "when they don't": function(err, r) {
         assert.isNull(err);
@@ -393,7 +384,7 @@ suite.addBatch({
     },
     "is 'secondary'": function (err, r) {
       assert.isNull(err);
-      assert.strictEqual(r, 'secondary');
+      assert.isUndefined(r);
     }
   },
   "emailType of lloyd@nowhe.re": {
@@ -403,30 +394,6 @@ suite.addBatch({
     "is 'secondary'": function (err, r) {
       assert.isNull(err);
       assert.strictEqual(r, 'secondary');
-    }
-  }
-});
-
-suite.addBatch({
-  "removing an existing email": {
-    topic: function() {
-      var cb = this.callback;
-      db.emailToUID("lloyd@somewhe.re", function(err, uid) {
-        db.removeEmail(uid, "lloyd@nowhe.re", cb);
-      });
-    },
-    "returns no error": function(err, r) {
-      assert.isNull(err);
-      assert.isUndefined(r);
-    },
-    "causes emailKnown": {
-      topic: function() {
-        db.emailKnown('lloyd@nowhe.re', this.callback);
-      },
-      "to return false": function (err, r) {
-        assert.isNull(err);
-        assert.strictEqual(r, false);
-      }
     }
   }
 });
@@ -468,16 +435,16 @@ suite.addBatch({
         db.addPrimaryEmailToAccount(uid, "lloyd2@primary.domain", cb);
       });
     },
-    "returns no error": function(err) {
-      assert.isNull(err);
+    "returns an error": function(err) {
+      assert.strictEqual(err, "cannot add email address to an existing account");
     },
     "causes emailKnown": {
       topic: function() {
         db.emailKnown('lloyd2@primary.domain', this.callback);
       },
-      "to return true": function (err, r) {
+      "to return false": function (err, r) {
         assert.isNull(err);
-        assert.strictEqual(r, true);
+        assert.strictEqual(r, false);
       }
     },
     "causes emailType": {
@@ -493,29 +460,53 @@ suite.addBatch({
   "adding a primary email to an account with only secondaries": {
     topic: function() {
       var cb = this.callback;
-      db.emailToUID('lloyd@somewhe.re', function(err, uid) {
+      db.emailToUID('lloyd@nowhe.re', function(err, uid) {
         db.addPrimaryEmailToAccount(uid, "lloyd3@primary.domain", cb);
       });
     },
-    "returns no error": function(err) {
-      assert.isNull(err);
+    "returns an error": function(err) {
+      assert.strictEqual(err, "cannot add email address to an existing account");
     },
     "causes emailKnown": {
       topic: function() {
         db.emailKnown('lloyd3@primary.domain', this.callback);
       },
-      "to return true": function (err, r) {
+      "to return false": function (err, r) {
         assert.isNull(err);
-        assert.strictEqual(r, true);
+        assert.strictEqual(r, false);
       }
     },
     "causes emailType": {
       topic: function() {
         db.emailType('lloyd3@primary.domain', this.callback);
       },
-      "to return 'primary'": function (err, r) {
+      "to return undefined": function (err, r) {
         assert.isNull(err);
-        assert.strictEqual(r, 'primary');
+        assert.isUndefined(r);
+      }
+    }
+  }
+});
+
+suite.addBatch({
+  "removing an existing email": {
+    topic: function() {
+      var cb = this.callback;
+      db.emailToUID("lloyd@nowhe.re", function(err, uid) {
+        db.removeEmail(uid, "lloyd@nowhe.re", cb);
+      });
+    },
+    "returns no error": function(err, r) {
+      assert.isNull(err);
+      assert.isUndefined(r);
+    },
+    "causes emailKnown": {
+      topic: function() {
+        db.emailKnown('lloyd@nowhe.re', this.callback);
+      },
+      "to return false": function (err, r) {
+        assert.isNull(err);
+        assert.strictEqual(r, false);
       }
     }
   }
@@ -529,16 +520,16 @@ suite.addBatch({
         db.addPrimaryEmailToAccount(uid, "lloyd3@primary.domain", cb);
       });
     },
-    "returns no error": function(err) {
-      assert.isNull(err);
+    "returns an error": function(err) {
+      assert.strictEqual(err, "cannot add email address to an existing account");
     },
     "and emailKnown": {
       topic: function() {
         db.emailKnown('lloyd3@primary.domain', this.callback);
       },
-      "still returns true": function (err, r) {
+      "still returns false": function (err, r) {
         assert.isNull(err);
-        assert.strictEqual(r, true);
+        assert.strictEqual(r, false);
       }
     },
     "and emailType": {
@@ -559,13 +550,13 @@ suite.addBatch({
         assert.isFalse(r);
       }
     },
-    "and email is added": {
+    "and email is not added": {
       topic: function() {
         db.emailsBelongToSameAccount('lloyd3@primary.domain', 'lloyd@primary.domain', this.callback);
       },
       "to new account": function(err, r) {
         assert.isNull(err);
-        assert.isTrue(r);
+        assert.isFalse(r);
       }
     }
   }
@@ -588,9 +579,7 @@ suite.addBatch({
     },
     "returns a lastUsedAs of secondary": function(err, r) {
       assert.isNull(err);
-      assert(!!r);
-      assert.equal(r.lastUsedAs, 'secondary');
-      assert.equal(r.hasPassword, true);
+      assert.isNull(r);
     }
   },
   ".emailInfo for unknown email address": {

@@ -7,6 +7,7 @@
 require('./lib/test_env.js');
 
 const assert = require('assert'),
+db = require('../lib/db.js'),
 vows = require('vows'),
 start_stop = require('./lib/start-stop.js'),
 wsapi = require('./lib/wsapi.js'),
@@ -128,16 +129,19 @@ suite.addBatch({
   }
 });
 
-// confirm second email email address to the account
 suite.addBatch({
-  "create second account": {
+  "manually adding the second email": {
     topic: function() {
-      wsapi.post('/wsapi/complete_email_confirmation', { token: token }).call(this);
+      var cb = this.callback;
+      db.emailToUID('first@fakeemail.com', function (err, uid) {
+        if (err) {
+          return cb(err);
+        }
+        db.forcefullyAddEmail(uid, 'second@fakeemail.com', 'secondary', cb);
+      });
     },
-    "account created": function(err, r) {
-      assert.equal(r.code, 200);
-      assert.strictEqual(JSON.parse(r.body).success, true);
-      token = undefined;
+    "works": function(err) {
+      assert.isNull(err);
     }
   }
 });
@@ -530,9 +534,27 @@ suite.addBatch({
     topic: function() {
       wsapi.post('/wsapi/complete_email_confirmation', { token: token }).call(this);
     },
-    "works": function(err, r) {
+    "fails as expected": function(err, r) {
       assert.equal(r.code, 200);
       var body = JSON.parse(r.body);
+      assert.isFalse(body.success);
+    }
+  }
+});
+
+suite.addBatch({
+  "manually re-adding the second email": {
+    topic: function() {
+      var cb = this.callback;
+      db.emailToUID('first@fakeemail.com', function (err, uid) {
+        if (err) {
+          return cb(err);
+        }
+        db.forcefullyAddEmail(uid, 'second@fakeemail.com', 'secondary', cb);
+      });
+    },
+    "works": function(err) {
+      assert.isNull(err);
     }
   }
 });

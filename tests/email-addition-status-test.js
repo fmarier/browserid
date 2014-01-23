@@ -162,12 +162,13 @@ suite.addBatch({
         token: token,
       }).call(this);
     },
-    "succeeds": function(err, r) {
+    "fails as expected": function(err, r) {
       assert.strictEqual(r.code, 200);
       assert.strictEqual(r.headers['content-type'].indexOf('application/json'), 0);
       var data = jsonParse(r.body);
       if (!data) return assert.fail("Could not parse JSON: " + r.body);
-      assert.strictEqual(data.success, true);
+      assert.strictEqual(data.success, false);
+      assert.strictEqual(data.error, "cannot add email address to an existing account");
     }
   }
 });
@@ -182,7 +183,7 @@ suite.addBatch({
       assert.strictEqual(r.headers['content-type'].indexOf('application/json'), 0);
       var data = jsonParse(r.body);
       if (!data) return assert.fail("Could not parse JSON: " + r.body);
-      assert.strictEqual(data.status, 'complete');
+      assert.strictEqual(data.status, 'failed');
     },
   },
 });

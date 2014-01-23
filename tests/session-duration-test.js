@@ -10,6 +10,7 @@ require('./lib/test_env.js');
 const assert =
 require('assert'),
 vows = require('vows'),
+db = require('../lib/db.js'),
 start_stop = require('./lib/start-stop.js'),
 wsapi = require('./lib/wsapi.js'),
 config = require('../lib/configuration.js'),
@@ -385,6 +386,21 @@ suite.addBatch({
       var resp = JSON.parse(r.body);
       // ensure the session duration has not been reset
       assert.strictEqual(getSessionDuration(), config.get('authentication_duration_ms'));
+    }
+  }
+});
+
+suite.addBatch({
+  "manually adding the second email": {
+    topic: function() {
+      var cb = this.callback;
+      db.emailToUID(TEST_EMAIL, function (err, uid) {
+        if (err) return cb(err);
+        db.forcefullyAddEmail(uid, SECOND_EMAIL, 'secondary', cb);
+      });
+    },
+    "works": function(err) {
+      assert.isNull(err);
     }
   }
 });

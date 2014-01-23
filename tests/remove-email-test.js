@@ -8,6 +8,7 @@ require('./lib/test_env.js');
 
 const assert = require('assert'),
 vows = require('vows'),
+db = require('../lib/db.js'),
 start_stop = require('./lib/start-stop.js'),
 wsapi = require('./lib/wsapi.js'),
 email = require('../lib/email.js'),
@@ -81,14 +82,29 @@ suite.addBatch({
 
 // confirm second email address on the account
 suite.addBatch({
-  "create second account": {
+  "confirm second email via token": {
     topic: function() {
       wsapi.post('/wsapi/complete_email_confirmation', { token: token }).call(this);
     },
-    "account created": function(err, r) {
+    "fails as expected": function(err, r) {
       assert.equal(r.code, 200);
-      assert.strictEqual(JSON.parse(r.body).success, true);
+      assert.strictEqual(JSON.parse(r.body).success, false);
       token = undefined;
+    }
+  }
+});
+
+suite.addBatch({
+  "manually adding the second email": {
+    topic: function() {
+      var cb = this.callback;
+      db.emailToUID('first@fakeemail.com', function (err, uid) {
+        if (err) return cb(err);
+        db.forcefullyAddEmail(uid, 'second@fakeemail.com', 'secondary', cb);
+      });
+    },
+    "works": function(err) {
+      assert.isNull(err);
     }
   }
 });

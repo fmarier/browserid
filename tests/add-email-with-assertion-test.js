@@ -140,10 +140,11 @@ suite.addBatch({
         assertion: g_assertion
       }).call(this);
     },
-    "works once we are authenticated": function(err, r) {
+    "fails as expected": function(err, r) {
       var resp = JSON.parse(r.body);
       assert.isObject(resp);
-      assert.isTrue(resp.success);
+      assert.isFalse(resp.success);
+      assert.strictEqual(resp.error, "cannot add email address to an existing account");
     }
   }
 });
@@ -221,8 +222,8 @@ suite.addBatch({
     },
     "returns an object with what we'd expect": function(err, r) {
       var emails = JSON.parse(r.body).emails;
-      assert.strictEqual(emails.length, 2)
-      assert.ok(emails.indexOf(TEST_EMAIL) != -1);
+      assert.strictEqual(emails.length, 1);
+      assert.ok(emails.indexOf(TEST_EMAIL) === -1);
       assert.ok(emails.indexOf(TEST_FIRST_ACCT) != -1);
     }
   },
@@ -235,7 +236,7 @@ suite.addBatch({
       var r = JSON.parse(r.body);
       assert.equal(r.type, "primary");
       assert.equal(r.issuer, TEST_DOMAIN);
-      assert.equal(r.state, "known");
+      assert.equal(r.state, "unknown");
       assert.isString(r.auth);
       assert.isString(r.prov);
     }
